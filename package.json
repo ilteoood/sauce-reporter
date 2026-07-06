@@ -1,0 +1,29 @@
+{
+  "name": "sauce-reporter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Monthly open source activity report for the authenticated GitHub user.",
+  "scripts": {
+    "report": "tsx src/index.ts",
+    "start": "tsx src/index.ts",
+    "build": "tsc",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@octokit/graphql": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=22.6.0"
+  }
+}

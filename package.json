@@ -5,17 +5,18 @@
   "type": "module",
   "description": "Monthly open source activity report for the authenticated GitHub user.",
   "scripts": {
-    "report": "tsx src/index.ts",
-    "start": "tsx src/index.ts",
+    "report": "TZ=UTC tsx src/index.ts",
+    "start": "TZ=UTC tsx src/index.ts",
     "build": "tsc",
-    "lint": "tsc --noEmit",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "lint": "TZ=UTC tsc --noEmit",
+    "typecheck": "TZ=UTC tsc --noEmit",
+    "test": "TZ=UTC vitest run",
+    "test:watch": "TZ=UTC vitest"
   },
   "dependencies": {
     "@actions/core": "^1.11.1",
-    "@octokit/graphql": "^9.0.0"
+    "@octokit/graphql": "^9.0.0",
+    "date-fns": "^4.4.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

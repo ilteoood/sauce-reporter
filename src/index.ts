@@ -2,6 +2,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import * as core from '@actions/core';
 import { graphql } from '@octokit/graphql';
+import { addDays, format, isValid, parseISO, startOfDay, startOfMonth, subMonths } from 'date-fns';
 import {
   ACTIVITY_QUERY,
   VIEWER_QUERY,
@@ -41,8 +42,8 @@ export async function paginate<T>(fetchPage: FetchPage<T>): Promise<T[]> {
 }
 
 export function previousMonthRange(now: Date): DateRange {
-  const from = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
-  const to = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const from = startOfMonth(subMonths(now, 1));
+  const to = startOfMonth(now);
   return { from, to };
 }
 
@@ -56,7 +57,7 @@ export function resolveDateRange(fromInput: string, toInput: string, now: Date =
     if (to.getTime() <= from.getTime()) {
       throw new Error(`'to' must be after 'from'`);
     }
-    return { from: startOfUtcDay(from), to: startOfUtcDay(to) };
+    return { from: startOfDay(from), to: startOfDay(to) };
   }
   return previousMonthRange(now);
 }
@@ -64,16 +65,8 @@ export function resolveDateRange(fromInput: string, toInput: string, now: Date =
 function parseIsoDate(value: string): Date | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) return null;
-  const [, y, m, d] = match;
-  const year = Number(y);
-  const month = Number(m);
-  const day = Number(d);
-  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
-  return new Date(Date.UTC(year, month - 1, day));
-}
-
-function startOfUtcDay(date: Date): Date {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const parsed = parseISO(value);
+  return isValid(parsed) ? parsed : null;
 }
 
 export interface FilteredActivity {
@@ -207,20 +200,11 @@ function countDistinctRepos<T extends { repository: { nameWithOwner: string } }>
 }
 
 function formatMonthLabel(date: Date): string {
-  return date.toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  return format(date, 'MMMM yyyy');
 }
 
 function formatIsoDate(date: Date): string {
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-function addDays(date: Date, days: number): Date {
-  const result = new Date(date.getTime());
-  result.setUTCDate(result.getUTCDate() + days);
-  return result;
+  return format(date, 'yyyy-MM-dd');
 }
 
 export interface Client {

@@ -5,8 +5,8 @@
   "type": "module",
   "description": "Monthly open source activity report for the authenticated GitHub user.",
   "scripts": {
-    "report": "TZ=UTC tsx src/index.ts",
-    "start": "TZ=UTC tsx src/index.ts",
+    "report": "TZ=UTC node src/index.ts",
+    "start": "TZ=UTC node src/index.ts",
     "build": "tsc",
     "lint": "TZ=UTC tsc --noEmit",
     "typecheck": "TZ=UTC tsc --noEmit",
@@ -19,12 +19,11 @@
     "date-fns": "^4.4.0"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
-    "tsx": "^4.19.2",
+    "@types/node": "^24.0.0",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   },
   "engines": {
-    "node": ">=22.6.0"
+    "node": ">=24"
   }
 }

@@ -25,7 +25,7 @@ sauce-reporter/
 ├── src/index.ts                            # orchestration: dates → fetch → filter → format → write
 ├── src/query.ts                            # GraphQL query string + response types
 ├── src/index.test.ts                       # unit tests: filter, format, dates, paginate
-├── package.json                            # @octokit/graphql, typescript, tsx, vitest, @types/node
+├── package.json                            # @octokit/graphql, typescript, vitest, @types/node
 ├── tsconfig.json
 ├── .gitignore
 └── README.md                               # one page: setup + re-run instructions

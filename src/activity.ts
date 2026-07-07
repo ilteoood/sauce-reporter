@@ -48,9 +48,15 @@ export function filterPublic(activity: ContributionsCollection | null | undefine
     return emptyActivity();
   }
   return {
-    issues: activity.issueContributions.nodes.filter(isPublicContribution),
-    pullRequests: activity.pullRequestContributions.nodes.filter(isPublicContribution),
-    reviews: activity.pullRequestReviewContributions.nodes.filter(isPublicContribution),
+    issues: activity.issueContributions.nodes.filter((contribution) =>
+      isPublicContribution(contribution, (entry) => entry.issue.repository),
+    ),
+    pullRequests: activity.pullRequestContributions.nodes.filter((contribution) =>
+      isPublicContribution(contribution, (entry) => entry.pullRequest.repository),
+    ),
+    reviews: activity.pullRequestReviewContributions.nodes.filter((contribution) =>
+      isPublicContribution(contribution, (entry) => entry.repository),
+    ),
     commits: activity.commitContributionsByRepository.filter(
       (entry: CommitContributionRepository) => entry.repository.visibility === 'PUBLIC',
     ),
@@ -68,10 +74,11 @@ function emptyActivity(): FilteredActivity {
   };
 }
 
-function isPublicContribution<T extends { isRestricted: boolean; repository: { visibility: string } }>(
+function isPublicContribution<T extends { isRestricted: boolean }>(
   contribution: T,
+  getRepository: (contribution: T) => { visibility: string },
 ): boolean {
-  return !contribution.isRestricted && contribution.repository.visibility === 'PUBLIC';
+  return !contribution.isRestricted && getRepository(contribution).visibility === 'PUBLIC';
 }
 
 export async function fetchActivity(

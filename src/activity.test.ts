@@ -21,7 +21,15 @@ describe('filterPublic', () => {
         nodes: [
           makeIssue(),
           makeIssue({ isRestricted: true }),
-          makeIssue({ repository: { nameWithOwner: 'foo/private', visibility: 'PRIVATE' } }),
+          makeIssue({
+            issue: {
+              number: 1,
+              title: 'Issue title',
+              url: 'https://github.com/foo/private/issues/1',
+              state: 'OPEN',
+              repository: { nameWithOwner: 'foo/private', visibility: 'PRIVATE' },
+            },
+          }),
         ],
       },
       pullRequestContributions: {
@@ -52,7 +60,13 @@ describe('filterPublic', () => {
         nodes: [
           makeIssue(),
           makeIssue({
-            issue: { number: 2, title: 'Two', url: 'https://github.com/foo/bar/issues/2', state: 'CLOSED' },
+            issue: {
+              number: 2,
+              title: 'Two',
+              url: 'https://github.com/foo/bar/issues/2',
+              state: 'CLOSED',
+              repository: { nameWithOwner: 'foo/bar', visibility: 'PUBLIC' },
+            },
           }),
         ],
       },

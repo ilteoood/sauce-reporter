@@ -23,10 +23,10 @@ export const ACTIVITY_QUERY = /* GraphQL */ `
               title
               url
               state
-            }
-            repository {
-              nameWithOwner
-              visibility
+              repository {
+                nameWithOwner
+                visibility
+              }
             }
           }
         }
@@ -43,10 +43,10 @@ export const ACTIVITY_QUERY = /* GraphQL */ `
               title
               url
               state
-            }
-            repository {
-              nameWithOwner
-              visibility
+              repository {
+                nameWithOwner
+                visibility
+              }
             }
           }
         }
@@ -103,6 +103,7 @@ export interface IssueRef {
   title: string;
   url: string;
   state: 'OPEN' | 'CLOSED';
+  repository: RepositoryRef;
 }
 
 export interface PullRequestRef {
@@ -110,20 +111,19 @@ export interface PullRequestRef {
   title: string;
   url: string;
   state?: 'OPEN' | 'CLOSED' | 'MERGED';
+  repository: RepositoryRef;
 }
 
 export interface IssueContribution {
   occurredAt: string;
   isRestricted: boolean;
   issue: IssueRef;
-  repository: RepositoryRef;
 }
 
 export interface PullRequestContribution {
   occurredAt: string;
   isRestricted: boolean;
   pullRequest: PullRequestRef;
-  repository: RepositoryRef;
 }
 
 export interface PullRequestReviewContribution {

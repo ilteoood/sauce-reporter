@@ -22,7 +22,7 @@ Private repositories are filtered out after the fetch and are never stored.
 
 ```bash
 npm install
-REPORTER_TOKEN=<your-token> npx tsx src/index.ts
+REPORTER_TOKEN=<your-token> npm run report
 ```
 
 Or override the window:
@@ -30,7 +30,7 @@ Or override the window:
 ```bash
 REPORTER_TOKEN=<your-token> \
 INPUT_FROM=2026-01-01 INPUT_TO=2026-02-01 \
-npx tsx src/index.ts
+npm run report
 ```
 
 ## What the report contains

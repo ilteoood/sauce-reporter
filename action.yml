@@ -25,7 +25,7 @@ runs:
     - name: Setup Node
       uses: actions/setup-node@v4
       with:
-        node-version: '22'
+        node-version: '24'
     - name: Install dependencies
       shell: bash
       run: npm ci || npm install
@@ -38,7 +38,7 @@ runs:
         INPUT_FROM: ${{ inputs.from }}
         INPUT_TO: ${{ inputs.to }}
         INPUT_OUTPUT_DIR: ${{ inputs.output-dir }}
-      run: npx tsx src/index.ts
+      run: node src/index.ts
 branding:
   icon: 'file-text'
   color: 'purple'

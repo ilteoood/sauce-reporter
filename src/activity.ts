@@ -48,14 +48,20 @@ export function filterPublic(activity: ContributionsCollection | null | undefine
     return emptyActivity();
   }
   return {
-    issues: activity.issueContributions.nodes.filter((contribution) =>
-      isPublicContribution(contribution, (entry) => entry.issue.repository),
+    issues: activity.issueContributions.nodes.filter(
+      (contribution): contribution is IssueContribution =>
+        contribution !== null &&
+        isPublicContribution(contribution, (entry) => entry.issue.repository),
     ),
-    pullRequests: activity.pullRequestContributions.nodes.filter((contribution) =>
-      isPublicContribution(contribution, (entry) => entry.pullRequest.repository),
+    pullRequests: activity.pullRequestContributions.nodes.filter(
+      (contribution): contribution is PullRequestContribution =>
+        contribution !== null &&
+        isPublicContribution(contribution, (entry) => entry.pullRequest.repository),
     ),
-    reviews: activity.pullRequestReviewContributions.nodes.filter((contribution) =>
-      isPublicContribution(contribution, (entry) => entry.repository),
+    reviews: activity.pullRequestReviewContributions.nodes.filter(
+      (contribution): contribution is PullRequestReviewContribution =>
+        contribution !== null &&
+        isPublicContribution(contribution, (entry) => entry.repository),
     ),
     commits: activity.commitContributionsByRepository.filter(
       (entry: CommitContributionRepository) => entry.repository.visibility === 'PUBLIC',

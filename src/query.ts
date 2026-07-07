@@ -140,7 +140,7 @@ export interface CommitContributionRepository {
 
 export interface Connection<T> {
   pageInfo: { hasNextPage: boolean; endCursor: string | null };
-  nodes: T[];
+  nodes: (T | null)[];
 }
 
 export interface ContributionsCollection {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filterPublic, paginate, type FetchPage } from './activity.ts';
+import { fetchActivity, filterPublic, paginate, type Client, type FetchPage } from './activity.ts';
 import { makeCollection, makeCommitRepo, makeIssue, makePullRequest, makeReview } from './test-fixtures.ts';
 
 describe('filterPublic', () => {
@@ -131,5 +131,41 @@ describe('paginate', () => {
       pageInfo: { hasNextPage: false, endCursor: null },
     });
     expect(await paginate(fetchPage)).toEqual([42]);
+  });
+});
+
+describe('fetchActivity', () => {
+  it('drops null contribution nodes returned by GitHub for restricted entries', async () => {
+    const collectionWithNulls = {
+      hasAnyRestrictedContributions: true,
+      issueContributions: {
+        pageInfo: { hasNextPage: false, endCursor: null },
+        nodes: [makeIssue(), null, makeIssue({ isRestricted: true }), null],
+      },
+      pullRequestContributions: {
+        pageInfo: { hasNextPage: false, endCursor: null },
+        nodes: [makePullRequest(), null],
+      },
+      pullRequestReviewContributions: {
+        pageInfo: { hasNextPage: false, endCursor: null },
+        nodes: [makeReview(), null],
+      },
+      commitContributionsByRepository: [
+        { contributions: { totalCount: 1 }, repository: { nameWithOwner: 'foo/bar', visibility: 'PUBLIC' } },
+      ],
+    };
+    const client = {
+      graphql: async <T>() => {
+        return { user: { contributionsCollection: collectionWithNulls } } as T;
+      },
+    } as unknown as Client;
+    const result = await fetchActivity(client, 'octocat', {
+      from: new Date('2026-06-01T00:00:00Z'),
+      to: new Date('2026-07-01T00:00:00Z'),
+    });
+    expect(result.issues).toHaveLength(1);
+    expect(result.pullRequests).toHaveLength(1);
+    expect(result.reviews).toHaveLength(1);
+    expect(result.hasRestrictedContributions).toBe(true);
   });
 });

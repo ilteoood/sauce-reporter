@@ -1,0 +1,61 @@
+name: 'Monthly Report'
+
+on:
+  schedule:
+    - cron: '0 6 1 * *'
+  workflow_dispatch:
+    inputs:
+      from:
+        description: 'ISO date (YYYY-MM-DD), defaults to previous month'
+        required: false
+      to:
+        description: 'ISO date (YYYY-MM-DD), defaults to previous month'
+        required: false
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'action.yml'
+      - '.github/workflows/monthly-report.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    name: 'Test'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+
+  report:
+    name: 'Generate Report'
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          token: ${{ secrets.REPORTER_TOKEN }}
+          from: ${{ inputs.from }}
+          to: ${{ inputs.to }}
+      - name: Commit and push report
+        run: |
+          git config user.name "sauce-reporter[bot]"
+          git config user.email "sauce-reporter[bot]@users.noreply.github.com"
+          git add reports/
+          if ! git diff --cached --quiet; then
+            git commit -m "report: $(date -u +%Y-%m)"
+            git push
+          else
+            echo "No changes to commit."
+          fi

@@ -1,0 +1,44 @@
+name: 'Monthly Open Source Activity Report'
+description: 'Generate a monthly Markdown report of public open-source activity for the authenticated GitHub user.'
+inputs:
+  token:
+    description: 'GitHub token with read access to public contributions (defaults to GITHUB_TOKEN or REPORTER_TOKEN env).'
+    required: false
+  from:
+    description: 'ISO date (YYYY-MM-DD) marking the start of the reporting window. Defaults to the first day of the previous month.'
+    required: false
+  to:
+    description: 'ISO date (YYYY-MM-DD) marking the end (exclusive) of the reporting window. Defaults to the first day of the current month.'
+    required: false
+  output-dir:
+    description: 'Directory where the report Markdown file is written.'
+    required: false
+    default: 'reports'
+outputs:
+  report-path:
+    description: 'Path to the written Markdown report, relative to the repository root.'
+  login:
+    description: 'Login of the authenticated GitHub user that was reported on.'
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+    - name: Install dependencies
+      shell: bash
+      run: npm ci || npm install
+    - name: Generate report
+      shell: bash
+      env:
+        TZ: UTC
+        REPORTER_TOKEN: ${{ inputs.token }}
+        INPUT_TOKEN: ${{ inputs.token }}
+        INPUT_FROM: ${{ inputs.from }}
+        INPUT_TO: ${{ inputs.to }}
+        INPUT_OUTPUT_DIR: ${{ inputs.output-dir }}
+      run: npx tsx src/index.ts
+branding:
+  icon: 'file-text'
+  color: 'purple'

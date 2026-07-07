@@ -20,13 +20,23 @@ describe('formatReport', () => {
       issues: [
         makeIssue({
           occurredAt: '2026-06-20T10:00:00Z',
-          issue: { number: 123, title: 'First issue', url: 'https://github.com/foo/bar/issues/123', state: 'OPEN' },
-          repository: { nameWithOwner: 'foo/bar', visibility: 'PUBLIC' },
+          issue: {
+            number: 123,
+            title: 'First issue',
+            url: 'https://github.com/foo/bar/issues/123',
+            state: 'OPEN',
+            repository: { nameWithOwner: 'foo/bar', visibility: 'PUBLIC' },
+          },
         }),
         makeIssue({
           occurredAt: '2026-06-10T10:00:00Z',
-          issue: { number: 1, title: 'Second', url: 'https://github.com/baz/qux/issues/1', state: 'CLOSED' },
-          repository: { nameWithOwner: 'baz/qux', visibility: 'PUBLIC' },
+          issue: {
+            number: 1,
+            title: 'Second',
+            url: 'https://github.com/baz/qux/issues/1',
+            state: 'CLOSED',
+            repository: { nameWithOwner: 'baz/qux', visibility: 'PUBLIC' },
+          },
         }),
       ],
       pullRequests: [
@@ -36,8 +46,8 @@ describe('formatReport', () => {
             title: 'A PR',
             url: 'https://github.com/baz/qux/pull/456',
             state: 'MERGED',
+            repository: { nameWithOwner: 'baz/qux', visibility: 'PUBLIC' },
           },
-          repository: { nameWithOwner: 'baz/qux', visibility: 'PUBLIC' },
         }),
       ],
       reviews: [
@@ -96,11 +106,23 @@ describe('formatReport', () => {
       issues: [
         makeIssue({
           occurredAt: '2026-06-01T00:00:00Z',
-          issue: { number: 1, title: 'Older', url: 'https://github.com/foo/bar/issues/1', state: 'OPEN' },
+          issue: {
+            number: 1,
+            title: 'Older',
+            url: 'https://github.com/foo/bar/issues/1',
+            state: 'OPEN',
+            repository: { nameWithOwner: 'foo/bar', visibility: 'PUBLIC' },
+          },
         }),
         makeIssue({
           occurredAt: '2026-06-20T00:00:00Z',
-          issue: { number: 2, title: 'Newer', url: 'https://github.com/foo/bar/issues/2', state: 'OPEN' },
+          issue: {
+            number: 2,
+            title: 'Newer',
+            url: 'https://github.com/foo/bar/issues/2',
+            state: 'OPEN',
+            repository: { nameWithOwner: 'foo/bar', visibility: 'PUBLIC' },
+          },
         }),
       ],
       pullRequests: [],

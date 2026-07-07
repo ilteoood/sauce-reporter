@@ -10,8 +10,13 @@ export function makeIssue(overrides: Partial<IssueContribution> = {}): IssueCont
   return {
     occurredAt: '2026-06-15T10:00:00Z',
     isRestricted: false,
-    issue: { number: 1, title: 'Issue title', url: 'https://github.com/foo/bar/issues/1', state: 'OPEN' },
-    repository: { nameWithOwner: 'foo/bar', visibility: 'PUBLIC' },
+    issue: {
+      number: 1,
+      title: 'Issue title',
+      url: 'https://github.com/foo/bar/issues/1',
+      state: 'OPEN',
+      repository: { nameWithOwner: 'foo/bar', visibility: 'PUBLIC' },
+    },
     ...overrides,
   };
 }
@@ -25,8 +30,8 @@ export function makePullRequest(overrides: Partial<PullRequestContribution> = {}
       title: 'PR title',
       url: 'https://github.com/foo/bar/pull/2',
       state: 'OPEN',
+      repository: { nameWithOwner: 'foo/bar', visibility: 'PUBLIC' },
     },
-    repository: { nameWithOwner: 'foo/bar', visibility: 'PUBLIC' },
     ...overrides,
   };
 }

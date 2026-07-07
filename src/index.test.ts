@@ -22,8 +22,13 @@ describe('run integration', () => {
           {
             occurredAt: '2026-06-15T10:00:00Z',
             isRestricted: false,
-            issue: { number: 1, title: 'Issue', url: 'https://github.com/foo/bar/issues/1', state: 'OPEN' },
-            repository: { nameWithOwner: 'foo/bar', visibility: 'PUBLIC' },
+            issue: {
+              number: 1,
+              title: 'Issue',
+              url: 'https://github.com/foo/bar/issues/1',
+              state: 'OPEN',
+              repository: { nameWithOwner: 'foo/bar', visibility: 'PUBLIC' },
+            },
           },
         ],
       },

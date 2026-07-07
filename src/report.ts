@@ -43,9 +43,9 @@ export function formatReport(activity: FilteredActivity, meta: ReportMeta): stri
 
 function buildSummary(activity: FilteredActivity): string[] {
   const totalCommits = activity.commits.reduce((acc, entry) => acc + entry.contributions.totalCount, 0);
-  const issueRepos = countDistinctRepos(activity.issues);
-  const prRepos = countDistinctRepos(activity.pullRequests);
-  const reviewRepos = countDistinctRepos(activity.reviews);
+  const issueRepos = countDistinctRepos(activity.issues, (contribution) => contribution.issue.repository);
+  const prRepos = countDistinctRepos(activity.pullRequests, (contribution) => contribution.pullRequest.repository);
+  const reviewRepos = countDistinctRepos(activity.reviews, (contribution) => contribution.repository);
   const commitRepos = activity.commits.length;
   return [
     `- ${activity.issues.length} issues opened across ${issueRepos} repos`,
@@ -76,14 +76,14 @@ function sortByOccurredAt<T extends { occurredAt: string }>(items: T[]): T[] {
 }
 
 function formatIssueLine(contribution: IssueContribution): string {
-  const { issue, repository } = contribution;
-  return `- [${repository.nameWithOwner}#${issue.number} — ${issue.title}](${issue.url}) — ${issue.state}`;
+  const { issue } = contribution;
+  return `- [${issue.repository.nameWithOwner}#${issue.number} — ${issue.title}](${issue.url}) — ${issue.state}`;
 }
 
 function formatPullRequestLine(contribution: PullRequestContribution): string {
-  const { pullRequest, repository } = contribution;
+  const { pullRequest } = contribution;
   const state = pullRequest.state ?? 'OPEN';
-  return `- [${repository.nameWithOwner}#${pullRequest.number} — ${pullRequest.title}](${pullRequest.url}) — ${state}`;
+  return `- [${pullRequest.repository.nameWithOwner}#${pullRequest.number} — ${pullRequest.title}](${pullRequest.url}) — ${state}`;
 }
 
 function formatReviewLine(contribution: PullRequestReviewContribution): string {
@@ -91,8 +91,8 @@ function formatReviewLine(contribution: PullRequestReviewContribution): string {
   return `- [${repository.nameWithOwner}#${pullRequest.number} — ${pullRequest.title}](${pullRequest.url})`;
 }
 
-function countDistinctRepos<T extends { repository: { nameWithOwner: string } }>(items: T[]): number {
-  return new Set(items.map((item) => item.repository.nameWithOwner)).size;
+function countDistinctRepos<T>(items: T[], getRepository: (item: T) => { nameWithOwner: string }): number {
+  return new Set(items.map(getRepository).map((repository) => repository.nameWithOwner)).size;
 }
 
 function formatMonthLabel(date: Date): string {

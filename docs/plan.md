@@ -87,7 +87,7 @@ query Activity(
 
 ## The pipeline
 
-1. **Inputs**: `from`, `to` ISO dates from `getInput()`; default to previous calendar month if absent.
+1. **Inputs**: `from`, `to` ISO dates from `getInput()`. The `to` date is **inclusive** — it is normalized to end-of-day (`23:59:59.999`) before the GraphQL call, so `to=2026-07-31` fetches contributions through the last millisecond of 2026-07-31. Defaults to the previous calendar month when both inputs are absent: `from` = first day of the previous month at `00:00:00.000`, `to` = last day of the previous month at `23:59:59.999`. Single-day windows are allowed (`to == from`).
 2. **Token**: `core.getInput('token') || process.env.GITHUB_TOKEN || process.env.REPORTER_TOKEN`. A PAT is required in the Action because `GITHUB_TOKEN` only sees the current repository.
 3. **Resolve login**: `viewer { login }` once, before the main query.
 4. **Fetch**: paginate the three contribution connections (issues, PRs, PR reviews). Each loop follows `pageInfo.hasNextPage` and re-issues the query with `after: <endCursor>` until exhausted. Commits are fetched once — they come aggregated by repository.
@@ -181,7 +181,7 @@ on:
         description: 'ISO date (YYYY-MM-DD), defaults to previous month'
         required: false
       to:
-        description: 'ISO date (YYYY-MM-DD), defaults to previous month'
+        description: 'ISO date (YYYY-MM-DD) marking the end (inclusive) of the reporting window. Defaults to the last day of the previous month.'
         required: false
 
 permissions:
@@ -229,3 +229,7 @@ jobs:
 - **PAT type** — fine-grained (recommended, least privilege) or classic (`read:user` + `public_repo`)?
 - **Commit target** — push directly to `main`, or open a `reports/YYYY-MM` branch as a PR for review?
 - **Backfill** — generate one historical month on the first run, or start from the current month and let history accumulate?
+
+## Changelog
+
+- **2026-08-01 — Inclusive `to` date.** The `to` input now marks the **inclusive** end of the reporting window. It is normalized to end-of-day (`23:59:59.999`) before the GraphQL call, so `to=2026-07-31` fetches every contribution through the last millisecond of that day. The default monthly range is now `[first day of previous month 00:00:00.000, last day of previous month 23:59:59.999]`. The report's period header shows the inclusive end verbatim (no off-by-one). Single-day windows (`to == from`) are now allowed.

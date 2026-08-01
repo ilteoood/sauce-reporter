@@ -10,7 +10,7 @@ import { makeCommitRepo, makeIssue, makePullRequest, makeReview } from './test-f
 const meta = {
   login: 'ilteoood',
   from: new Date('2026-06-01T00:00:00Z'),
-  to: new Date('2026-07-01T00:00:00Z'),
+  to: new Date('2026-06-30T00:00:00Z'),
 };
 
 describe('formatReport', () => {
@@ -133,6 +133,23 @@ describe('formatReport', () => {
     const markdown = formatReport(activity, meta);
     const issueSection = markdown.split('## Issues opened\n')[1]!.split('## Pull requests')[0]!;
     expect(issueSection.indexOf('Newer')).toBeLessThan(issueSection.indexOf('Older'));
+  });
+
+  it('shows the inclusive `to` date in the period header without shifting it back a day', () => {
+    const activity: FilteredActivity = {
+      issues: [],
+      pullRequests: [],
+      reviews: [],
+      commits: [],
+      hasRestrictedContributions: false,
+    };
+    const metaEnd = {
+      login: 'ilteoood',
+      from: new Date('2026-07-01T00:00:00Z'),
+      to: new Date('2026-07-31T00:00:00Z'),
+    };
+    const markdown = formatReport(activity, metaEnd);
+    expect(markdown).toContain('**Period:** 2026-07-01 → 2026-07-31');
   });
 });
 

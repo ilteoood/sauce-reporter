@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { addDays, format } from 'date-fns';
+import { format } from 'date-fns';
 import type { FilteredActivity } from './activity.ts';
 import type { CommitContributionRepository, IssueContribution, PullRequestContribution, PullRequestReviewContribution } from './query.ts';
 
@@ -12,7 +12,7 @@ export interface ReportMeta {
 
 export function formatReport(activity: FilteredActivity, meta: ReportMeta): string {
   const monthLabel = formatMonthLabel(meta.from);
-  const period = `${formatIsoDate(meta.from)} → ${formatIsoDate(addDays(meta.to, -1))}`;
+  const period = `${formatIsoDate(meta.from)} → ${formatIsoDate(meta.to)}`;
   const summary = buildSummary(activity);
 
   const lines: string[] = [

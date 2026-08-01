@@ -29,7 +29,7 @@ Or override the window:
 
 ```bash
 REPORTER_TOKEN=<your-token> \
-INPUT_FROM=2026-01-01 INPUT_TO=2026-02-01 \
+INPUT_FROM=2026-01-01 INPUT_TO=2026-01-31 \
 npm run report
 ```
 

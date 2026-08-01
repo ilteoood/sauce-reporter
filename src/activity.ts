@@ -1,5 +1,4 @@
 import { graphql } from '@octokit/graphql';
-import { addDays } from 'date-fns';
 import {
   ACTIVITY_QUERY,
   VIEWER_QUERY,
@@ -94,7 +93,7 @@ export async function fetchActivity(
   range: { from: Date; to: Date },
 ): Promise<FilteredActivity> {
   const fromIso = range.from.toISOString();
-  const toIso = addDays(range.to, 1).toISOString();
+  const toIso = range.to.toISOString();
 
   const issueFetcher: FetchPage<IssueContribution> = async (after) => {
     const data = await client.graphql<ActivityResponse>(ACTIVITY_QUERY, {

@@ -1,4 +1,4 @@
-import { endOfMonth, isValid, parseISO, startOfDay, startOfMonth, subMonths } from 'date-fns';
+import { endOfDay, endOfMonth, isValid, parseISO, startOfDay, startOfMonth, subMonths } from 'date-fns';
 
 export interface DateRange {
   from: Date;
@@ -7,7 +7,7 @@ export interface DateRange {
 
 export function previousMonthRange(now: Date): DateRange {
   const from = startOfMonth(subMonths(now, 1));
-  const to = startOfDay(endOfMonth(subMonths(now, 1)));
+  const to = endOfDay(endOfMonth(subMonths(now, 1)));
   return { from, to };
 }
 
@@ -21,7 +21,7 @@ export function resolveDateRange(fromInput: string, toInput: string, now: Date =
     if (to.getTime() < from.getTime()) {
       throw new Error(`'to' must be on or after 'from'`);
     }
-    return { from: startOfDay(from), to: startOfDay(to) };
+    return { from: startOfDay(from), to: endOfDay(to) };
   }
   return previousMonthRange(now);
 }

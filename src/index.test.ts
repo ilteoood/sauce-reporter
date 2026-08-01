@@ -59,11 +59,11 @@ describe('run integration', () => {
         return commitResponse;
       },
     } as unknown as Parameters<typeof run>[0]['client'];
-    const range = { from: new Date('2026-06-01T00:00:00Z'), to: new Date('2026-07-01T00:00:00Z') };
+    const range = { from: new Date('2026-06-01T00:00:00Z'), to: new Date('2026-06-30T23:59:59.999Z') };
     const result = await run({
       token: 'fake-token',
       fromInput: '2026-06-01',
-      toInput: '2026-07-01',
+      toInput: '2026-06-30',
       outputDir: tempDir,
       client,
     });

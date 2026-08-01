@@ -8,7 +8,7 @@ inputs:
     description: 'ISO date (YYYY-MM-DD) marking the start of the reporting window. Defaults to the first day of the previous month.'
     required: false
   to:
-    description: 'ISO date (YYYY-MM-DD) marking the end (exclusive) of the reporting window. Defaults to the first day of the current month.'
+    description: 'ISO date (YYYY-MM-DD) marking the end (inclusive) of the reporting window. Defaults to the last day of the previous month.'
     required: false
   output-dir:
     description: 'Directory where the report Markdown file is written.'

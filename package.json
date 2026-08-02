@@ -10,8 +10,8 @@
     "build": "tsc",
     "lint": "TZ=UTC tsc --noEmit",
     "typecheck": "TZ=UTC tsc --noEmit",
-    "test": "TZ=UTC vitest run",
-    "test:watch": "TZ=UTC vitest"
+    "test": "TZ=UTC node --test src/**/*.test.ts",
+    "test:watch": "TZ=UTC node --test --watch src/**/*.test.ts"
   },
   "dependencies": {
     "@actions/core": "^1.11.1",
@@ -20,8 +20,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
-    "typescript": "^5.7.2",
-    "vitest": "^3.2.7"
+    "typescript": "^5.7.2"
   },
   "overrides": {
     "@actions/http-client": "^3.0.2"

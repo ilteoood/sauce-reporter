@@ -1,7 +1,8 @@
+import { strict as assert } from 'node:assert';
 import { readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, it } from 'node:test';
 import { parseExcludeRepositories, run } from './index.ts';
 
 describe('run integration', () => {
@@ -67,27 +68,28 @@ describe('run integration', () => {
       outputDir: tempDir,
       client,
     });
-    expect(result.login).toBe('octocat');
-    expect(result.range).toEqual(range);
+    assert.equal(result.login, 'octocat');
+    assert.deepEqual(result.range, range);
     const written = readFileSync(result.filePath, 'utf8');
-    expect(written).toContain('# Open source activity — June 2026');
-    expect(written).toContain('**User:** @octocat');
-    expect(written).toContain('foo/bar#1 — Issue');
-    expect(written).toContain('foo/bar: 3');
+    assert.ok(written.includes('# Open source activity — June 2026'));
+    assert.ok(written.includes('**User:** @octocat'));
+    assert.ok(written.includes('foo/bar#1 — Issue'));
+    assert.ok(written.includes('foo/bar: 3'));
     rmSync(tempDir, { recursive: true, force: true });
   });
 });
 
 describe('parseExcludeRepositories', () => {
   it('trims, lowercases, drops empty entries', () => {
-    expect(parseExcludeRepositories(' me/DotFiles, ,, work/Mirror ')).toEqual(
+    assert.deepEqual(
+      parseExcludeRepositories(' me/DotFiles, ,, work/Mirror '),
       new Set(['me/dotfiles', 'work/mirror']),
     );
   });
 
   it('returns an empty set for undefined, empty, or comma-only input', () => {
-    expect(parseExcludeRepositories(undefined).size).toBe(0);
-    expect(parseExcludeRepositories('').size).toBe(0);
-    expect(parseExcludeRepositories(',,,').size).toBe(0);
+    assert.equal(parseExcludeRepositories(undefined).size, 0);
+    assert.equal(parseExcludeRepositories('').size, 0);
+    assert.equal(parseExcludeRepositories(',,,').size, 0);
   });
 });

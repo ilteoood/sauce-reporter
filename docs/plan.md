@@ -25,7 +25,7 @@ sauce-reporter/
 ├── src/index.ts                            # orchestration: dates → fetch → filter → format → write
 ├── src/query.ts                            # GraphQL query string + response types
 ├── src/index.test.ts                       # unit tests: filter, format, dates, paginate
-├── package.json                            # @octokit/graphql, typescript, vitest, @types/node
+├── package.json                            # @octokit/graphql, typescript, @types/node
 ├── tsconfig.json
 ├── .gitignore
 └── README.md                               # one page: setup + re-run instructions
@@ -151,7 +151,7 @@ Within each section: sort by `occurredAt` descending. Group commits by repositor
 
 ## Testing
 
-`vitest` as the runner — fast, native TS, no transpile config. Tests live colocated as `src/index.test.ts`.
+`node:test` (built-in Node.js test runner) — no extra dependency, native TS via type stripping. Tests live colocated as `src/*.test.ts`.
 
 | Helper | What it asserts |
 |---|---|

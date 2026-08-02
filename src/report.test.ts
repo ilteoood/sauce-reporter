@@ -2,7 +2,7 @@ import { strict as assert } from 'node:assert';
 import { existsSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, it } from 'node:test';
 import { deriveReportFileName, formatReport, writeReport } from './report.ts';
 import type { FilteredActivity } from './activity.ts';
 import { makeCommitRepo, makeIssue, makePullRequest, makeReview } from './test-fixtures.ts';
@@ -59,7 +59,7 @@ describe('formatReport', () => {
       commits: [makeCommitRepo('foo/bar', 7), makeCommitRepo('baz/qux', 10)],
     };
     const markdown = formatReport(activity, meta);
-    expect(markdown).toBe(`# Open source activity — June 2026
+    assert.equal(markdown, `# Open source activity — June 2026
 
 **User:** @ilteoood
 **Period:** 2026-06-01 → 2026-06-30
@@ -95,10 +95,10 @@ describe('formatReport', () => {
       { issues: [], pullRequests: [], reviews: [], commits: [], hasRestrictedContributions: false },
       meta,
     );
-    expect(markdown).toContain('## Issues opened\n_None._');
-    expect(markdown).toContain('## Pull requests opened\n_None._');
-    expect(markdown).toContain('## PR reviews submitted\n_None._');
-    expect(markdown).toContain('## Commits on default branch\n_None._');
+    assert.ok(markdown.includes('## Issues opened\n_None._'));
+    assert.ok(markdown.includes('## Pull requests opened\n_None._'));
+    assert.ok(markdown.includes('## PR reviews submitted\n_None._'));
+    assert.ok(markdown.includes('## Commits on default branch\n_None._'));
   });
 
   it('orders issues by occurredAt descending', () => {
@@ -132,7 +132,7 @@ describe('formatReport', () => {
     };
     const markdown = formatReport(activity, meta);
     const issueSection = markdown.split('## Issues opened\n')[1]!.split('## Pull requests')[0]!;
-    expect(issueSection.indexOf('Newer')).toBeLessThan(issueSection.indexOf('Older'));
+    assert.ok(issueSection.indexOf('Newer') < issueSection.indexOf('Older'));
   });
 
   it('shows the inclusive `to` date in the period header without shifting it back a day', () => {
@@ -149,14 +149,14 @@ describe('formatReport', () => {
       to: new Date('2026-07-31T00:00:00Z'),
     };
     const markdown = formatReport(activity, metaEnd);
-    expect(markdown).toContain('**Period:** 2026-07-01 → 2026-07-31');
+    assert.ok(markdown.includes('**Period:** 2026-07-01 → 2026-07-31'));
   });
 });
 
 describe('deriveReportFileName', () => {
   it('returns YYYY-MM.md for a month start', () => {
-    expect(deriveReportFileName(new Date('2026-06-01T00:00:00Z'))).toBe('2026-06.md');
-    expect(deriveReportFileName(new Date('2025-01-01T00:00:00Z'))).toBe('2025-01.md');
+    assert.equal(deriveReportFileName(new Date('2026-06-01T00:00:00Z')), '2026-06.md');
+    assert.equal(deriveReportFileName(new Date('2025-01-01T00:00:00Z')), '2025-01.md');
   });
 });
 

@@ -233,3 +233,134 @@ jobs:
 ## Changelog
 
 - **2026-08-01 — Inclusive `to` date.** The `to` input now marks the **inclusive** end of the reporting window. It is normalized to end-of-day (`23:59:59.999`) before the GraphQL call, so `to=2026-07-31` fetches every contribution through the last millisecond of that day. The default monthly range is now `[first day of previous month 00:00:00.000, last day of previous month 23:59:59.999]`. The report's period header shows the inclusive end verbatim (no off-by-one). Single-day windows (`to == from`) are now allowed.
+- **2026-08-02 — Exclude repositories.** New `exclude-repositories` Action input accepts a comma-separated list of `nameWithOwner` strings (e.g. `me/dotfiles,work/mirror`). Contributions from listed repositories are dropped after the fetch, in the same `filterPublic` funnel that handles public/restricted filtering. Matching is case-insensitive, whitespace is trimmed, empty entries are ignored. No new Markdown section — excluded repos simply produce fewer rows. Empty / unset input keeps today's behaviour.
+
+## Exclude repositories
+
+Users occasionally want to drop contributions from specific repositories — for example, work forks they don't want counted, mirrors, or personal projects that should not appear in the monthly digest. Today the only filter is visibility (public-only); everything else reaches the report.
+
+### Goal
+
+Add an Action input that lets the user pass a comma-separated list of `nameWithOwner` strings. Any contribution originating from a listed repository is dropped before the report is formatted. The list is optional and defaults to empty (no exclusions). Filtering happens **after** the fetch and **before** formatting, in the same single funnel that already drops restricted and non-public contributions.
+
+### API
+
+`action.yml` gains one input:
+
+```yaml
+exclude-repositories:
+  description: 'Comma-separated list of repository `nameWithOwner` strings (e.g. `me/dotfiles,work/proprietary-mirror`) to exclude from the report. Whitespace around entries is trimmed. Matching is case-insensitive on `nameWithOwner`. Defaults to no exclusions.'
+  required: false
+```
+
+The composite action's `Generate report` step adds one env var alongside the existing ones:
+
+```yaml
+INPUT_EXCLUDE_REPOSITORIES: ${{ inputs.exclude-repositories }}
+```
+
+The monthly workflow's `workflow_dispatch` inputs gain the matching field so manual re-runs can pass it too:
+
+```yaml
+exclude-repositories:
+  description: 'Comma-separated `nameWithOwner` list to exclude from the report. Defaults to no exclusions.'
+  required: false
+```
+
+### Parsing
+
+A single helper, co-located with `run()` in `src/index.ts`:
+
+```ts
+export function parseExcludeRepositories(input: string | undefined): Set<string> {
+  return new Set(
+    (input ?? '')
+      .split(',')
+      .map((entry) => entry.trim().toLowerCase())
+      .filter((entry) => entry.length > 0),
+  );
+}
+```
+
+One entry, no validation beyond trim + lowercase + drop empty. `nameWithOwner` is always lowercase in the GitHub API (`facebook/react`), so storing the lowercase form means the membership check at filter time does not need a `toLowerCase()` per node.
+
+### Filtering
+
+Extend `filterPublic(activity, excluded)` in `src/activity.ts`. The single funnel already touches every contribution branch — adding one guard there means issues, PRs, reviews, and commits are all covered with no extra call sites:
+
+```ts
+export function filterPublic(
+  activity: ContributionsCollection | null | undefined,
+  excluded: ReadonlySet<string> = new Set(),
+): FilteredActivity {
+  if (!activity) {
+    return emptyActivity();
+  }
+  return {
+    issues: activity.issueContributions.nodes.filter(
+      (contribution): contribution is IssueContribution =>
+        contribution !== null &&
+        isPublicContribution(contribution, (entry) => entry.issue.repository) &&
+        !excluded.has(entry.issue.repository.nameWithOwner.toLowerCase()),
+    ),
+    pullRequests: /* same pattern, entry.pullRequest.repository */,
+    reviews: /* same pattern, entry.repository */,
+    commits: activity.commitContributionsByRepository.filter(
+      (entry) =>
+        entry.repository.visibility === 'PUBLIC' &&
+        !excluded.has(entry.repository.nameWithOwner.toLowerCase()),
+    ),
+    hasRestrictedContributions: activity.hasAnyRestrictedContributions,
+  };
+}
+```
+
+`fetchActivity` gains one extra argument and forwards the set; `run()` reads the input, parses it once, and threads it through:
+
+```ts
+const excluded = parseExcludeRepositories(options.excludeRepositoriesInput);
+const activity = await fetchActivity(client, login, range, excluded);
+```
+
+`RunOptions` picks up one optional field (`excludeRepositoriesInput?: string`). The default in `main()` reads `core.getInput('exclude-repositories')`. Both stay optional — `filterPublic`'s default parameter keeps every existing call site and test unchanged.
+
+### Why filter at `filterPublic`, not in the GraphQL query
+
+`ContributionsCollection` does not support server-side repo filtering. Filtering after the fetch (a) keeps the GraphQL schema out of the input layer, (b) reuses the existing public/restricted guard without duplicating it, and (c) means the `nameWithOwner` is already typed. The cost is fetching nodes we will drop — acceptable because (i) the connection is small (monthly window, single user), and (ii) pagination already buffers the whole window.
+
+### Why `nameWithOwner`, not `name`
+
+`nameWithOwner` is the unambiguous, globally unique identifier. Users have multiple repositories named `dotfiles`; only `me/dotfiles` is specific. The Action's input help text already uses this string form, so users copy-paste from the GitHub URL slug without translation.
+
+### Markdown surface
+
+No new section, no header. The Markdown shape is unchanged — excluded repositories simply produce fewer rows in the existing sections, or no row at all when a repository is fully excluded. The summary counts already reflect what is filtered, so excluding `me/dotfiles` (3 issues, 2 commits) yields a summary that drops those three contributions without further adjustment.
+
+### Testing
+
+`activity.test.ts` gains three tests next to the existing `filterPublic` suite:
+
+| Test | What it asserts |
+|---|---|
+| `drops contributions whose repository is in the excluded set` | One issue, one PR, one review, one commit-repo from `me/dotfiles` are all filtered when the set contains `me/dotfiles`. Public repos outside the set pass through untouched. |
+| `matching is case-insensitive` | Excluding `Me/DotFiles` (mixed case in input) drops `me/dotfiles` contributions. |
+| `empty / undefined excluded set behaves like no input` | `filterPublic(collection)` and `filterPublic(collection, new Set())` and `filterPublic(collection, undefined)` return the same shape and counts. |
+
+A fourth test covers the parser directly in a new `src/index.test.ts` `describe('parseExcludeRepositories')` block:
+
+| Test | What it asserts |
+|---|---|
+| `trims, lowercases, drops empty entries` | `' me/DotFiles, ,, work/Mirror '` → `Set(['me/dotfiles', 'work/mirror'])`. |
+| `returns empty set for undefined / empty string / only commas` | All three inputs → `new Set()`. |
+
+No fixture changes — the existing `makeIssue` / `makePullRequest` / `makeReview` / `makeCommitRepo` already accept repository overrides.
+
+### Skipped (add when)
+
+- **Glob / owner-only patterns** (`me/*` or bare `me`). One `string.split('/')[0]` heuristic is easy; a correct glob matcher is not. Add when a user actually asks for it.
+- **Excluding by date range per repository** (e.g. "drop `me/dotfiles` until 2026-09"). YAGNI: the visibility filter already covers the "I don't want this repo in my report" intent at a coarser granularity.
+- **Persisting the exclude list in the repo** (e.g. `.sauce-reporter.json`). The Action input is enough until the same exclusions need to apply across many workflows.
+
+### Changelog entry to add when shipped
+
+> **2026-08-XX — Exclude repositories.** New `exclude-repositories` Action input accepts a comma-separated list of `nameWithOwner` strings (e.g. `me/dotfiles,work/mirror`). Contributions from listed repositories are dropped after the fetch, in the same `filterPublic` funnel that handles public/restricted filtering. Matching is case-insensitive, whitespace is trimmed, empty entries are ignored. No new Markdown section — excluded repos simply produce fewer rows. Empty / unset input keeps today's behaviour.

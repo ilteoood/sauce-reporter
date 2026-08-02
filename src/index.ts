@@ -15,8 +15,18 @@ export interface RunOptions {
   fromInput?: string;
   toInput?: string;
   outputDir?: string;
+  excludeRepositoriesInput?: string;
   now?: Date;
   client?: Client;
+}
+
+export function parseExcludeRepositories(input: string | undefined): Set<string> {
+  return new Set(
+    (input ?? '')
+      .split(',')
+      .map((entry) => entry.trim().toLowerCase())
+      .filter((entry) => entry.length > 0),
+  );
 }
 
 export async function run(options: RunOptions): Promise<{ filePath: string; login: string; range: DateRange }> {
@@ -27,7 +37,8 @@ export async function run(options: RunOptions): Promise<{ filePath: string; logi
     } satisfies Client);
   const range = resolveDateRange(options.fromInput ?? '', options.toInput ?? '', options.now);
   const login = await resolveViewer(client);
-  const activity = await fetchActivity(client, login, range);
+  const excluded = parseExcludeRepositories(options.excludeRepositoriesInput);
+  const activity = await fetchActivity(client, login, range, excluded);
   const markdown = formatReport(activity, { login, from: range.from, to: range.to });
   const outputDir = options.outputDir ?? 'reports';
   const fileName = deriveReportFileName(range.from);
@@ -42,7 +53,8 @@ async function main(): Promise<void> {
   }
   const fromInput = core.getInput('from');
   const toInput = core.getInput('to');
-  const result = await run({ token, fromInput, toInput });
+  const excludeRepositoriesInput = core.getInput('exclude-repositories');
+  const result = await run({ token, fromInput, toInput, excludeRepositoriesInput });
   core.setOutput('report-path', result.filePath);
   core.setOutput('login', result.login);
   core.info(`Wrote report to ${result.filePath} for @${result.login}`);

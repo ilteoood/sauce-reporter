@@ -11,6 +11,9 @@ on:
       to:
         description: 'ISO date (YYYY-MM-DD), defaults to previous month'
         required: false
+      exclude-repositories:
+        description: 'Comma-separated `nameWithOwner` list to exclude from the report. Defaults to no exclusions.'
+        required: false
   push:
     branches:
       - main
@@ -48,6 +51,7 @@ jobs:
           token: ${{ secrets.REPORTER_TOKEN }}
           from: ${{ inputs.from }}
           to: ${{ inputs.to }}
+          exclude-repositories: ${{ inputs.exclude-repositories }}
       - name: Commit and push report
         run: |
           git config user.name "sauce-reporter[bot]"

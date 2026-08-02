@@ -14,6 +14,9 @@ inputs:
     description: 'Directory where the report Markdown file is written.'
     required: false
     default: 'reports'
+  exclude-repositories:
+    description: 'Comma-separated list of repository `nameWithOwner` strings (e.g. `me/dotfiles,work/proprietary-mirror`) to exclude from the report. Whitespace around entries is trimmed. Matching is case-insensitive on `nameWithOwner`. Defaults to no exclusions.'
+    required: false
 outputs:
   report-path:
     description: 'Path to the written Markdown report, relative to the repository root.'
@@ -38,6 +41,7 @@ runs:
         INPUT_FROM: ${{ inputs.from }}
         INPUT_TO: ${{ inputs.to }}
         INPUT_OUTPUT_DIR: ${{ inputs.output-dir }}
+        INPUT_EXCLUDE_REPOSITORIES: ${{ inputs.exclude-repositories }}
       run: node src/index.ts
 branding:
   icon: 'file-text'

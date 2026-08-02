@@ -43,7 +43,10 @@ export interface FilteredActivity {
   hasRestrictedContributions: boolean;
 }
 
-export function filterPublic(activity: ContributionsCollection | null | undefined): FilteredActivity {
+export function filterPublic(
+  activity: ContributionsCollection | null | undefined,
+  excluded: ReadonlySet<string> = new Set(),
+): FilteredActivity {
   if (!activity) {
     return emptyActivity();
   }
@@ -51,23 +54,28 @@ export function filterPublic(activity: ContributionsCollection | null | undefine
     issues: activity.issueContributions.nodes.filter(
       (contribution): contribution is IssueContribution =>
         contribution !== null &&
-        isPublicContribution(contribution, (entry) => entry.issue.repository),
+        isIncludedContribution(contribution, (entry) => entry.issue.repository, excluded),
     ),
     pullRequests: activity.pullRequestContributions.nodes.filter(
       (contribution): contribution is PullRequestContribution =>
         contribution !== null &&
-        isPublicContribution(contribution, (entry) => entry.pullRequest.repository),
+        isIncludedContribution(contribution, (entry) => entry.pullRequest.repository, excluded),
     ),
     reviews: activity.pullRequestReviewContributions.nodes.filter(
       (contribution): contribution is PullRequestReviewContribution =>
         contribution !== null &&
-        isPublicContribution(contribution, (entry) => entry.repository),
+        isIncludedContribution(contribution, (entry) => entry.repository, excluded),
     ),
     commits: activity.commitContributionsByRepository.filter(
-      (entry: CommitContributionRepository) => entry.repository.visibility === 'PUBLIC',
+      (entry: CommitContributionRepository) =>
+        entry.repository.visibility === 'PUBLIC' && !isExcluded(excluded, entry.repository.nameWithOwner),
     ),
     hasRestrictedContributions: activity.hasAnyRestrictedContributions,
   };
+}
+
+function isExcluded(excluded: ReadonlySet<string>, nameWithOwner: string): boolean {
+  return excluded.has(nameWithOwner.toLowerCase());
 }
 
 function emptyActivity(): FilteredActivity {
@@ -80,17 +88,20 @@ function emptyActivity(): FilteredActivity {
   };
 }
 
-function isPublicContribution<T extends { isRestricted: boolean }>(
+function isIncludedContribution<T extends { isRestricted: boolean }>(
   contribution: T,
-  getRepository: (contribution: T) => { visibility: string },
+  getRepository: (contribution: T) => { visibility: string; nameWithOwner: string },
+  excluded: ReadonlySet<string>,
 ): boolean {
-  return !contribution.isRestricted && getRepository(contribution).visibility === 'PUBLIC';
+  const repository = getRepository(contribution);
+  return !contribution.isRestricted && repository.visibility === 'PUBLIC' && !isExcluded(excluded, repository.nameWithOwner);
 }
 
 export async function fetchActivity(
   client: Client,
   login: string,
   range: { from: Date; to: Date },
+  excluded: ReadonlySet<string> = new Set(),
 ): Promise<FilteredActivity> {
   const fromIso = range.from.toISOString();
   const toIso = range.to.toISOString();
@@ -147,7 +158,7 @@ export async function fetchActivity(
       }
     : null;
 
-  return filterPublic(merged);
+  return filterPublic(merged, excluded);
 }
 
 type ConnectionKey = 'issueContributions' | 'pullRequestContributions' | 'pullRequestReviewContributions';

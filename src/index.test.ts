@@ -2,7 +2,7 @@ import { readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { run } from './index.ts';
+import { parseExcludeRepositories, run } from './index.ts';
 
 describe('run integration', () => {
   it('orchestrates end-to-end against a mocked GraphQL client', async () => {
@@ -75,5 +75,19 @@ describe('run integration', () => {
     expect(written).toContain('foo/bar#1 — Issue');
     expect(written).toContain('foo/bar: 3');
     rmSync(tempDir, { recursive: true, force: true });
+  });
+});
+
+describe('parseExcludeRepositories', () => {
+  it('trims, lowercases, drops empty entries', () => {
+    expect(parseExcludeRepositories(' me/DotFiles, ,, work/Mirror ')).toEqual(
+      new Set(['me/dotfiles', 'work/mirror']),
+    );
+  });
+
+  it('returns an empty set for undefined, empty, or comma-only input', () => {
+    expect(parseExcludeRepositories(undefined).size).toBe(0);
+    expect(parseExcludeRepositories('').size).toBe(0);
+    expect(parseExcludeRepositories(',,,').size).toBe(0);
   });
 });

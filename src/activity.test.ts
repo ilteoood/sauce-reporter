@@ -86,6 +86,108 @@ describe('filterPublic', () => {
     expect(result.reviews).toHaveLength(1);
     expect(result.commits).toHaveLength(1);
   });
+
+  it('drops contributions whose repository is in the excluded set', () => {
+    const collection = makeCollection({
+      issueContributions: {
+        pageInfo: { hasNextPage: false, endCursor: null },
+        nodes: [
+          makeIssue(),
+          makeIssue({
+            issue: {
+              number: 9,
+              title: 'Dotfiles',
+              url: 'https://github.com/me/dotfiles/issues/9',
+              state: 'OPEN',
+              repository: { nameWithOwner: 'me/dotfiles', visibility: 'PUBLIC' },
+            },
+          }),
+        ],
+      },
+      pullRequestContributions: {
+        pageInfo: { hasNextPage: false, endCursor: null },
+        nodes: [
+          makePullRequest(),
+          makePullRequest({
+            pullRequest: {
+              number: 8,
+              title: 'Mirror',
+              url: 'https://github.com/me/dotfiles/pull/8',
+              state: 'OPEN',
+              repository: { nameWithOwner: 'me/dotfiles', visibility: 'PUBLIC' },
+            },
+          }),
+        ],
+      },
+      pullRequestReviewContributions: {
+        pageInfo: { hasNextPage: false, endCursor: null },
+        nodes: [makeReview({ repository: { nameWithOwner: 'me/dotfiles', visibility: 'PUBLIC' } })],
+      },
+      commitContributionsByRepository: [
+        makeCommitRepo('foo/bar', 5),
+        makeCommitRepo('me/dotfiles', 2),
+      ],
+    });
+    const result = filterPublic(collection, new Set(['me/dotfiles']));
+    expect(result.issues.map((i) => i.issue.repository.nameWithOwner)).toEqual(['foo/bar']);
+    expect(result.pullRequests).toHaveLength(1);
+    expect(result.reviews).toHaveLength(0);
+    expect(result.commits.map((c) => c.repository.nameWithOwner)).toEqual(['foo/bar']);
+  });
+
+  it('matches excluded repositories case-insensitively', () => {
+    const collection = makeCollection({
+      issueContributions: {
+        pageInfo: { hasNextPage: false, endCursor: null },
+        nodes: [
+          makeIssue({
+            issue: {
+              number: 9,
+              title: 'Dotfiles',
+              url: 'https://github.com/Me/DotFiles/issues/9',
+              state: 'OPEN',
+              repository: { nameWithOwner: 'Me/DotFiles', visibility: 'PUBLIC' },
+            },
+          }),
+        ],
+      },
+      pullRequestContributions: {
+        pageInfo: { hasNextPage: false, endCursor: null },
+        nodes: [],
+      },
+      pullRequestReviewContributions: {
+        pageInfo: { hasNextPage: false, endCursor: null },
+        nodes: [],
+      },
+      commitContributionsByRepository: [makeCommitRepo('Me/DotFiles', 4)],
+    });
+    const result = filterPublic(collection, new Set(['me/dotfiles']));
+    expect(result.issues).toHaveLength(0);
+    expect(result.commits).toHaveLength(0);
+  });
+
+  it('treats empty and undefined excluded sets identically to no argument', () => {
+    const collection = makeCollection({
+      issueContributions: {
+        pageInfo: { hasNextPage: false, endCursor: null },
+        nodes: [makeIssue()],
+      },
+      pullRequestContributions: {
+        pageInfo: { hasNextPage: false, endCursor: null },
+        nodes: [makePullRequest()],
+      },
+      pullRequestReviewContributions: {
+        pageInfo: { hasNextPage: false, endCursor: null },
+        nodes: [makeReview()],
+      },
+      commitContributionsByRepository: [makeCommitRepo('foo/bar', 7)],
+    });
+    const baseline = filterPublic(collection);
+    const withEmpty = filterPublic(collection, new Set());
+    const withUndefined = filterPublic(collection, undefined);
+    expect(withEmpty).toEqual(baseline);
+    expect(withUndefined).toEqual(baseline);
+  });
 });
 
 describe('paginate', () => {

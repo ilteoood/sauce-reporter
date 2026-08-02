@@ -232,7 +232,8 @@ describe('paginate', () => {
       nodes: [],
       pageInfo: { hasNextPage: false, endCursor: null },
     });
-    assert.deepStrictEqual(await paginate(fetchPage), []);
+    const result = await paginate(fetchPage);
+    assert.deepStrictEqual(result, []);
   });
 
   it('stops iterating when hasNextPage is false even if endCursor is non-null', async () => {
@@ -251,7 +252,8 @@ describe('paginate', () => {
       nodes: [42],
       pageInfo: { hasNextPage: false, endCursor: null },
     });
-    assert.deepStrictEqual(await paginate(fetchPage), [42]);
+    const result = await paginate(fetchPage);
+    assert.deepStrictEqual(result, [42]);
   });
 });
 

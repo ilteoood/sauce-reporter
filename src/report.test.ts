@@ -95,10 +95,29 @@ describe('formatReport', () => {
       { issues: [], pullRequests: [], reviews: [], commits: [], hasRestrictedContributions: false },
       meta,
     );
-    assert.ok(markdown.includes('## Issues opened\n_None._'));
-    assert.ok(markdown.includes('## Pull requests opened\n_None._'));
-    assert.ok(markdown.includes('## PR reviews submitted\n_None._'));
-    assert.ok(markdown.includes('## Commits on default branch\n_None._'));
+    assert.strictEqual(markdown, `# Open source activity — June 2026
+
+**User:** @ilteoood
+**Period:** 2026-06-01 → 2026-06-30
+
+## Summary
+- 0 issues opened across 0 repos
+- 0 PRs opened across 0 repos
+- 0 PR reviews submitted across 0 repos
+- 0 commits on default branches across 0 repos
+
+## Issues opened
+_None._
+
+## Pull requests opened
+_None._
+
+## PR reviews submitted
+_None._
+
+## Commits on default branch
+_None._
+`);
   });
 
   it('orders issues by occurredAt descending', () => {
@@ -149,7 +168,29 @@ describe('formatReport', () => {
       to: new Date('2026-07-31T00:00:00Z'),
     };
     const markdown = formatReport(activity, metaEnd);
-    assert.ok(markdown.includes('**Period:** 2026-07-01 → 2026-07-31'));
+    assert.strictEqual(markdown, `# Open source activity — July 2026
+
+**User:** @ilteoood
+**Period:** 2026-07-01 → 2026-07-31
+
+## Summary
+- 0 issues opened across 0 repos
+- 0 PRs opened across 0 repos
+- 0 PR reviews submitted across 0 repos
+- 0 commits on default branches across 0 repos
+
+## Issues opened
+_None._
+
+## Pull requests opened
+_None._
+
+## PR reviews submitted
+_None._
+
+## Commits on default branch
+_None._
+`);
   });
 });
 

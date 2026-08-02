@@ -116,5 +116,5 @@ export function writeReport(content: string, options: WriteOptions): string {
 }
 
 export function deriveReportFileName(from: Date): string {
-  return `${formatIsoDate(from).slice(0, 7)}.md`;
+  return `${format(from, 'yyyy-MM')}.md`;
 }

@@ -46,12 +46,13 @@ describe('filterPublic', () => {
         makeCommitRepo('foo/private', 3, 'PRIVATE'),
       ],
     });
-    const result = filterPublic(collection);
-    assert.strictEqual(result.issues.length, 1);
-    assert.strictEqual(result.pullRequests.length, 1);
-    assert.strictEqual(result.reviews.length, 0);
-    assert.deepStrictEqual(result.commits.map((c) => c.repository.nameWithOwner), ['foo/bar']);
-    assert.strictEqual(result.hasRestrictedContributions, true);
+    assert.deepStrictEqual(filterPublic(collection), {
+      issues: [makeIssue()],
+      pullRequests: [makePullRequest()],
+      reviews: [],
+      commits: [makeCommitRepo('foo/bar', 5, 'PUBLIC')],
+      hasRestrictedContributions: true,
+    });
   });
 
   it('passes through all-public contributions untouched', () => {
@@ -81,11 +82,24 @@ describe('filterPublic', () => {
       },
       commitContributionsByRepository: [makeCommitRepo('foo/bar', 7)],
     });
-    const result = filterPublic(collection);
-    assert.strictEqual(result.issues.length, 2);
-    assert.strictEqual(result.pullRequests.length, 1);
-    assert.strictEqual(result.reviews.length, 1);
-    assert.strictEqual(result.commits.length, 1);
+    assert.deepStrictEqual(filterPublic(collection), {
+      issues: [
+        makeIssue(),
+        makeIssue({
+          issue: {
+            number: 2,
+            title: 'Two',
+            url: 'https://github.com/foo/bar/issues/2',
+            state: 'CLOSED',
+            repository: { nameWithOwner: 'foo/bar', visibility: 'PUBLIC' },
+          },
+        }),
+      ],
+      pullRequests: [makePullRequest()],
+      reviews: [makeReview()],
+      commits: [makeCommitRepo('foo/bar', 7)],
+      hasRestrictedContributions: false,
+    });
   });
 
   it('drops contributions whose repository is in the excluded set', () => {
@@ -129,11 +143,13 @@ describe('filterPublic', () => {
         makeCommitRepo('me/dotfiles', 2),
       ],
     });
-    const result = filterPublic(collection, new Set(['me/dotfiles']));
-    assert.deepStrictEqual(result.issues.map((i) => i.issue.repository.nameWithOwner), ['foo/bar']);
-    assert.strictEqual(result.pullRequests.length, 1);
-    assert.strictEqual(result.reviews.length, 0);
-    assert.deepStrictEqual(result.commits.map((c) => c.repository.nameWithOwner), ['foo/bar']);
+    assert.deepStrictEqual(filterPublic(collection, new Set(['me/dotfiles'])), {
+      issues: [makeIssue()],
+      pullRequests: [makePullRequest()],
+      reviews: [],
+      commits: [makeCommitRepo('foo/bar', 5)],
+      hasRestrictedContributions: false,
+    });
   });
 
   it('matches excluded repositories case-insensitively', () => {
@@ -162,9 +178,13 @@ describe('filterPublic', () => {
       },
       commitContributionsByRepository: [makeCommitRepo('Me/DotFiles', 4)],
     });
-    const result = filterPublic(collection, new Set(['me/dotfiles']));
-    assert.strictEqual(result.issues.length, 0);
-    assert.strictEqual(result.commits.length, 0);
+    assert.deepStrictEqual(filterPublic(collection, new Set(['me/dotfiles'])), {
+      issues: [],
+      pullRequests: [],
+      reviews: [],
+      commits: [],
+      hasRestrictedContributions: false,
+    });
   });
 
   it('treats empty and undefined excluded sets identically to no argument', () => {
@@ -184,10 +204,8 @@ describe('filterPublic', () => {
       commitContributionsByRepository: [makeCommitRepo('foo/bar', 7)],
     });
     const baseline = filterPublic(collection);
-    const withEmpty = filterPublic(collection, new Set());
-    const withUndefined = filterPublic(collection, undefined);
-    assert.deepStrictEqual(withEmpty, baseline);
-    assert.deepStrictEqual(withUndefined, baseline);
+    assert.deepStrictEqual(filterPublic(collection, new Set()), baseline);
+    assert.deepStrictEqual(filterPublic(collection, undefined), baseline);
   });
 });
 
@@ -266,9 +284,12 @@ describe('fetchActivity', () => {
       from: new Date('2026-06-01T00:00:00Z'),
       to: new Date('2026-07-01T00:00:00Z'),
     });
-    assert.strictEqual(result.issues.length, 1);
-    assert.strictEqual(result.pullRequests.length, 1);
-    assert.strictEqual(result.reviews.length, 1);
-    assert.strictEqual(result.hasRestrictedContributions, true);
+    assert.deepStrictEqual(result, {
+      issues: [makeIssue()],
+      pullRequests: [makePullRequest()],
+      reviews: [makeReview()],
+      commits: [{ contributions: { totalCount: 1 }, repository: { nameWithOwner: 'foo/bar', visibility: 'PUBLIC' } }],
+      hasRestrictedContributions: true,
+    });
   });
 });

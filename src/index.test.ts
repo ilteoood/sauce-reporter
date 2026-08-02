@@ -68,8 +68,7 @@ describe('run integration', () => {
       outputDir: tempDir,
       client,
     });
-    assert.strictEqual(result.login, 'octocat');
-    assert.deepStrictEqual(result.range, range);
+    assert.deepStrictEqual({ login: result.login, range: result.range }, { login: 'octocat', range });
     const written = readFileSync(result.filePath, 'utf8');
     assert.ok(written.includes('# Open source activity — June 2026'));
     assert.ok(written.includes('**User:** @octocat'));

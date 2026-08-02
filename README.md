@@ -54,7 +54,7 @@ Only `repository.visibility === 'PUBLIC'` contributions make it into the report.
 ```bash
 npm install
 npm run lint   # typecheck
-npm test       # vitest
+npm test       # node:test
 ```
 
 Tests live in `src/index.test.ts` and cover the date math, the public-only filter, the Markdown formatter, and the paginator (no network calls).

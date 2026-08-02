@@ -1,10 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { strict as assert } from 'node:assert';
+import { describe, it } from 'node:test';
 import { fetchActivity, filterPublic, paginate, type Client, type FetchPage } from './activity.ts';
 import { makeCollection, makeCommitRepo, makeIssue, makePullRequest, makeReview } from './test-fixtures.ts';
 
 describe('filterPublic', () => {
   it('returns empty activity when input is null', () => {
-    expect(filterPublic(null)).toEqual({
+    assert.deepStrictEqual(filterPublic(null), {
       issues: [],
       pullRequests: [],
       reviews: [],
@@ -45,12 +46,13 @@ describe('filterPublic', () => {
         makeCommitRepo('foo/private', 3, 'PRIVATE'),
       ],
     });
-    const result = filterPublic(collection);
-    expect(result.issues).toHaveLength(1);
-    expect(result.pullRequests).toHaveLength(1);
-    expect(result.reviews).toHaveLength(0);
-    expect(result.commits.map((c) => c.repository.nameWithOwner)).toEqual(['foo/bar']);
-    expect(result.hasRestrictedContributions).toBe(true);
+    assert.deepStrictEqual(filterPublic(collection), {
+      issues: [makeIssue()],
+      pullRequests: [makePullRequest()],
+      reviews: [],
+      commits: [makeCommitRepo('foo/bar', 5, 'PUBLIC')],
+      hasRestrictedContributions: true,
+    });
   });
 
   it('passes through all-public contributions untouched', () => {
@@ -80,11 +82,24 @@ describe('filterPublic', () => {
       },
       commitContributionsByRepository: [makeCommitRepo('foo/bar', 7)],
     });
-    const result = filterPublic(collection);
-    expect(result.issues).toHaveLength(2);
-    expect(result.pullRequests).toHaveLength(1);
-    expect(result.reviews).toHaveLength(1);
-    expect(result.commits).toHaveLength(1);
+    assert.deepStrictEqual(filterPublic(collection), {
+      issues: [
+        makeIssue(),
+        makeIssue({
+          issue: {
+            number: 2,
+            title: 'Two',
+            url: 'https://github.com/foo/bar/issues/2',
+            state: 'CLOSED',
+            repository: { nameWithOwner: 'foo/bar', visibility: 'PUBLIC' },
+          },
+        }),
+      ],
+      pullRequests: [makePullRequest()],
+      reviews: [makeReview()],
+      commits: [makeCommitRepo('foo/bar', 7)],
+      hasRestrictedContributions: false,
+    });
   });
 
   it('drops contributions whose repository is in the excluded set', () => {
@@ -128,11 +143,13 @@ describe('filterPublic', () => {
         makeCommitRepo('me/dotfiles', 2),
       ],
     });
-    const result = filterPublic(collection, new Set(['me/dotfiles']));
-    expect(result.issues.map((i) => i.issue.repository.nameWithOwner)).toEqual(['foo/bar']);
-    expect(result.pullRequests).toHaveLength(1);
-    expect(result.reviews).toHaveLength(0);
-    expect(result.commits.map((c) => c.repository.nameWithOwner)).toEqual(['foo/bar']);
+    assert.deepStrictEqual(filterPublic(collection, new Set(['me/dotfiles'])), {
+      issues: [makeIssue()],
+      pullRequests: [makePullRequest()],
+      reviews: [],
+      commits: [makeCommitRepo('foo/bar', 5)],
+      hasRestrictedContributions: false,
+    });
   });
 
   it('matches excluded repositories case-insensitively', () => {
@@ -161,9 +178,13 @@ describe('filterPublic', () => {
       },
       commitContributionsByRepository: [makeCommitRepo('Me/DotFiles', 4)],
     });
-    const result = filterPublic(collection, new Set(['me/dotfiles']));
-    expect(result.issues).toHaveLength(0);
-    expect(result.commits).toHaveLength(0);
+    assert.deepStrictEqual(filterPublic(collection, new Set(['me/dotfiles'])), {
+      issues: [],
+      pullRequests: [],
+      reviews: [],
+      commits: [],
+      hasRestrictedContributions: false,
+    });
   });
 
   it('treats empty and undefined excluded sets identically to no argument', () => {
@@ -183,10 +204,8 @@ describe('filterPublic', () => {
       commitContributionsByRepository: [makeCommitRepo('foo/bar', 7)],
     });
     const baseline = filterPublic(collection);
-    const withEmpty = filterPublic(collection, new Set());
-    const withUndefined = filterPublic(collection, undefined);
-    expect(withEmpty).toEqual(baseline);
-    expect(withUndefined).toEqual(baseline);
+    assert.deepStrictEqual(filterPublic(collection, new Set()), baseline);
+    assert.deepStrictEqual(filterPublic(collection, undefined), baseline);
   });
 });
 
@@ -204,8 +223,8 @@ describe('paginate', () => {
       return { nodes: [4], pageInfo: { hasNextPage: false, endCursor: null } };
     };
     const result = await paginate(fetchPage);
-    expect(result).toEqual([1, 2, 3, 4]);
-    expect(calls).toEqual([null, 'cursor-1', 'cursor-2']);
+    assert.deepStrictEqual(result, [1, 2, 3, 4]);
+    assert.deepStrictEqual(calls, [null, 'cursor-1', 'cursor-2']);
   });
 
   it('returns empty array when the first page is empty', async () => {
@@ -213,7 +232,8 @@ describe('paginate', () => {
       nodes: [],
       pageInfo: { hasNextPage: false, endCursor: null },
     });
-    expect(await paginate(fetchPage)).toEqual([]);
+    const result = await paginate(fetchPage);
+    assert.deepStrictEqual(result, []);
   });
 
   it('stops iterating when hasNextPage is false even if endCursor is non-null', async () => {
@@ -223,8 +243,8 @@ describe('paginate', () => {
       return { nodes: [calls], pageInfo: { hasNextPage: false, endCursor: 'unused' } };
     };
     const result = await paginate(fetchPage);
-    expect(result).toEqual([1]);
-    expect(calls).toBe(1);
+    assert.deepStrictEqual(result, [1]);
+    assert.strictEqual(calls, 1);
   });
 
   it('returns single page when hasNextPage is false on the first page', async () => {
@@ -232,7 +252,8 @@ describe('paginate', () => {
       nodes: [42],
       pageInfo: { hasNextPage: false, endCursor: null },
     });
-    expect(await paginate(fetchPage)).toEqual([42]);
+    const result = await paginate(fetchPage);
+    assert.deepStrictEqual(result, [42]);
   });
 });
 
@@ -265,9 +286,12 @@ describe('fetchActivity', () => {
       from: new Date('2026-06-01T00:00:00Z'),
       to: new Date('2026-07-01T00:00:00Z'),
     });
-    expect(result.issues).toHaveLength(1);
-    expect(result.pullRequests).toHaveLength(1);
-    expect(result.reviews).toHaveLength(1);
-    expect(result.hasRestrictedContributions).toBe(true);
+    assert.deepStrictEqual(result, {
+      issues: [makeIssue()],
+      pullRequests: [makePullRequest()],
+      reviews: [makeReview()],
+      commits: [{ contributions: { totalCount: 1 }, repository: { nameWithOwner: 'foo/bar', visibility: 'PUBLIC' } }],
+      hasRestrictedContributions: true,
+    });
   });
 });

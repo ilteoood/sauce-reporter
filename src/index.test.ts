@@ -1,7 +1,8 @@
+import { strict as assert } from 'node:assert';
 import { readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, it } from 'node:test';
 import { parseExcludeRepositories, run } from './index.ts';
 
 describe('run integration', () => {
@@ -67,27 +68,28 @@ describe('run integration', () => {
       outputDir: tempDir,
       client,
     });
-    expect(result.login).toBe('octocat');
-    expect(result.range).toEqual(range);
-    const written = readFileSync(result.filePath, 'utf8');
-    expect(written).toContain('# Open source activity — June 2026');
-    expect(written).toContain('**User:** @octocat');
-    expect(written).toContain('foo/bar#1 — Issue');
-    expect(written).toContain('foo/bar: 3');
+    const { filePath, ...rest } = result;
+    assert.deepStrictEqual(rest, { login: 'octocat', range });
+    const written = readFileSync(filePath, 'utf8');
+    assert.ok(written.includes('# Open source activity — June 2026'));
+    assert.ok(written.includes('**User:** @octocat'));
+    assert.ok(written.includes('foo/bar#1 — Issue'));
+    assert.ok(written.includes('foo/bar: 3'));
     rmSync(tempDir, { recursive: true, force: true });
   });
 });
 
 describe('parseExcludeRepositories', () => {
   it('trims, lowercases, drops empty entries', () => {
-    expect(parseExcludeRepositories(' me/DotFiles, ,, work/Mirror ')).toEqual(
+    assert.deepStrictEqual(
+      parseExcludeRepositories(' me/DotFiles, ,, work/Mirror '),
       new Set(['me/dotfiles', 'work/mirror']),
     );
   });
 
   it('returns an empty set for undefined, empty, or comma-only input', () => {
-    expect(parseExcludeRepositories(undefined).size).toBe(0);
-    expect(parseExcludeRepositories('').size).toBe(0);
-    expect(parseExcludeRepositories(',,,').size).toBe(0);
+    assert.strictEqual(parseExcludeRepositories(undefined).size, 0);
+    assert.strictEqual(parseExcludeRepositories('').size, 0);
+    assert.strictEqual(parseExcludeRepositories(',,,').size, 0);
   });
 });

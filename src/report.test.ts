@@ -59,7 +59,7 @@ describe('formatReport', () => {
       commits: [makeCommitRepo('foo/bar', 7), makeCommitRepo('baz/qux', 10)],
     };
     const markdown = formatReport(activity, meta);
-    assert.equal(markdown, `# Open source activity — June 2026
+    assert.strictEqual(markdown, `# Open source activity — June 2026
 
 **User:** @ilteoood
 **Period:** 2026-06-01 → 2026-06-30
@@ -155,8 +155,8 @@ describe('formatReport', () => {
 
 describe('deriveReportFileName', () => {
   it('returns YYYY-MM.md for a month start', () => {
-    assert.equal(deriveReportFileName(new Date('2026-06-01T00:00:00Z')), '2026-06.md');
-    assert.equal(deriveReportFileName(new Date('2025-01-01T00:00:00Z')), '2025-01.md');
+    assert.strictEqual(deriveReportFileName(new Date('2026-06-01T00:00:00Z')), '2026-06.md');
+    assert.strictEqual(deriveReportFileName(new Date('2025-01-01T00:00:00Z')), '2025-01.md');
   });
 });
 
@@ -169,8 +169,8 @@ describe('writeReport', () => {
 
   it('writes content to the requested path and returns it', () => {
     const filePath = writeReport('hello', { outputDir: tempDir, fileName: '2026-06.md' });
-    assert.equal(filePath, join(tempDir, '2026-06.md'));
-    assert.equal(readFileSync(filePath, 'utf8'), 'hello');
+    assert.strictEqual(filePath, join(tempDir, '2026-06.md'));
+    assert.strictEqual(readFileSync(filePath, 'utf8'), 'hello');
     rmSync(tempDir, { recursive: true, force: true });
   });
 

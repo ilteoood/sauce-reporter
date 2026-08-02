@@ -5,7 +5,7 @@ import { makeCollection, makeCommitRepo, makeIssue, makePullRequest, makeReview 
 
 describe('filterPublic', () => {
   it('returns empty activity when input is null', () => {
-    assert.deepEqual(filterPublic(null), {
+    assert.deepStrictEqual(filterPublic(null), {
       issues: [],
       pullRequests: [],
       reviews: [],
@@ -47,11 +47,11 @@ describe('filterPublic', () => {
       ],
     });
     const result = filterPublic(collection);
-    assert.equal(result.issues.length, 1);
-    assert.equal(result.pullRequests.length, 1);
-    assert.equal(result.reviews.length, 0);
-    assert.deepEqual(result.commits.map((c) => c.repository.nameWithOwner), ['foo/bar']);
-    assert.equal(result.hasRestrictedContributions, true);
+    assert.strictEqual(result.issues.length, 1);
+    assert.strictEqual(result.pullRequests.length, 1);
+    assert.strictEqual(result.reviews.length, 0);
+    assert.deepStrictEqual(result.commits.map((c) => c.repository.nameWithOwner), ['foo/bar']);
+    assert.strictEqual(result.hasRestrictedContributions, true);
   });
 
   it('passes through all-public contributions untouched', () => {
@@ -82,10 +82,10 @@ describe('filterPublic', () => {
       commitContributionsByRepository: [makeCommitRepo('foo/bar', 7)],
     });
     const result = filterPublic(collection);
-    assert.equal(result.issues.length, 2);
-    assert.equal(result.pullRequests.length, 1);
-    assert.equal(result.reviews.length, 1);
-    assert.equal(result.commits.length, 1);
+    assert.strictEqual(result.issues.length, 2);
+    assert.strictEqual(result.pullRequests.length, 1);
+    assert.strictEqual(result.reviews.length, 1);
+    assert.strictEqual(result.commits.length, 1);
   });
 
   it('drops contributions whose repository is in the excluded set', () => {
@@ -130,10 +130,10 @@ describe('filterPublic', () => {
       ],
     });
     const result = filterPublic(collection, new Set(['me/dotfiles']));
-    assert.deepEqual(result.issues.map((i) => i.issue.repository.nameWithOwner), ['foo/bar']);
-    assert.equal(result.pullRequests.length, 1);
-    assert.equal(result.reviews.length, 0);
-    assert.deepEqual(result.commits.map((c) => c.repository.nameWithOwner), ['foo/bar']);
+    assert.deepStrictEqual(result.issues.map((i) => i.issue.repository.nameWithOwner), ['foo/bar']);
+    assert.strictEqual(result.pullRequests.length, 1);
+    assert.strictEqual(result.reviews.length, 0);
+    assert.deepStrictEqual(result.commits.map((c) => c.repository.nameWithOwner), ['foo/bar']);
   });
 
   it('matches excluded repositories case-insensitively', () => {
@@ -163,8 +163,8 @@ describe('filterPublic', () => {
       commitContributionsByRepository: [makeCommitRepo('Me/DotFiles', 4)],
     });
     const result = filterPublic(collection, new Set(['me/dotfiles']));
-    assert.equal(result.issues.length, 0);
-    assert.equal(result.commits.length, 0);
+    assert.strictEqual(result.issues.length, 0);
+    assert.strictEqual(result.commits.length, 0);
   });
 
   it('treats empty and undefined excluded sets identically to no argument', () => {
@@ -186,8 +186,8 @@ describe('filterPublic', () => {
     const baseline = filterPublic(collection);
     const withEmpty = filterPublic(collection, new Set());
     const withUndefined = filterPublic(collection, undefined);
-    assert.deepEqual(withEmpty, baseline);
-    assert.deepEqual(withUndefined, baseline);
+    assert.deepStrictEqual(withEmpty, baseline);
+    assert.deepStrictEqual(withUndefined, baseline);
   });
 });
 
@@ -205,8 +205,8 @@ describe('paginate', () => {
       return { nodes: [4], pageInfo: { hasNextPage: false, endCursor: null } };
     };
     const result = await paginate(fetchPage);
-    assert.deepEqual(result, [1, 2, 3, 4]);
-    assert.deepEqual(calls, [null, 'cursor-1', 'cursor-2']);
+    assert.deepStrictEqual(result, [1, 2, 3, 4]);
+    assert.deepStrictEqual(calls, [null, 'cursor-1', 'cursor-2']);
   });
 
   it('returns empty array when the first page is empty', async () => {
@@ -214,7 +214,7 @@ describe('paginate', () => {
       nodes: [],
       pageInfo: { hasNextPage: false, endCursor: null },
     });
-    assert.deepEqual(await paginate(fetchPage), []);
+    assert.deepStrictEqual(await paginate(fetchPage), []);
   });
 
   it('stops iterating when hasNextPage is false even if endCursor is non-null', async () => {
@@ -224,8 +224,8 @@ describe('paginate', () => {
       return { nodes: [calls], pageInfo: { hasNextPage: false, endCursor: 'unused' } };
     };
     const result = await paginate(fetchPage);
-    assert.deepEqual(result, [1]);
-    assert.equal(calls, 1);
+    assert.deepStrictEqual(result, [1]);
+    assert.strictEqual(calls, 1);
   });
 
   it('returns single page when hasNextPage is false on the first page', async () => {
@@ -233,7 +233,7 @@ describe('paginate', () => {
       nodes: [42],
       pageInfo: { hasNextPage: false, endCursor: null },
     });
-    assert.deepEqual(await paginate(fetchPage), [42]);
+    assert.deepStrictEqual(await paginate(fetchPage), [42]);
   });
 });
 
@@ -266,9 +266,9 @@ describe('fetchActivity', () => {
       from: new Date('2026-06-01T00:00:00Z'),
       to: new Date('2026-07-01T00:00:00Z'),
     });
-    assert.equal(result.issues.length, 1);
-    assert.equal(result.pullRequests.length, 1);
-    assert.equal(result.reviews.length, 1);
-    assert.equal(result.hasRestrictedContributions, true);
+    assert.strictEqual(result.issues.length, 1);
+    assert.strictEqual(result.pullRequests.length, 1);
+    assert.strictEqual(result.reviews.length, 1);
+    assert.strictEqual(result.hasRestrictedContributions, true);
   });
 });

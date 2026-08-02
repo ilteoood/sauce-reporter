@@ -68,8 +68,8 @@ describe('run integration', () => {
       outputDir: tempDir,
       client,
     });
-    assert.equal(result.login, 'octocat');
-    assert.deepEqual(result.range, range);
+    assert.strictEqual(result.login, 'octocat');
+    assert.deepStrictEqual(result.range, range);
     const written = readFileSync(result.filePath, 'utf8');
     assert.ok(written.includes('# Open source activity — June 2026'));
     assert.ok(written.includes('**User:** @octocat'));
@@ -81,15 +81,15 @@ describe('run integration', () => {
 
 describe('parseExcludeRepositories', () => {
   it('trims, lowercases, drops empty entries', () => {
-    assert.deepEqual(
+    assert.deepStrictEqual(
       parseExcludeRepositories(' me/DotFiles, ,, work/Mirror '),
       new Set(['me/dotfiles', 'work/mirror']),
     );
   });
 
   it('returns an empty set for undefined, empty, or comma-only input', () => {
-    assert.equal(parseExcludeRepositories(undefined).size, 0);
-    assert.equal(parseExcludeRepositories('').size, 0);
-    assert.equal(parseExcludeRepositories(',,,').size, 0);
+    assert.strictEqual(parseExcludeRepositories(undefined).size, 0);
+    assert.strictEqual(parseExcludeRepositories('').size, 0);
+    assert.strictEqual(parseExcludeRepositories(',,,').size, 0);
   });
 });

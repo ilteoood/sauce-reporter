@@ -19,7 +19,7 @@
     "date-fns": "^4.4.0"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
+    "@types/node": "^26.2.0",
     "typescript": "^5.7.2"
   },
   "overrides": {

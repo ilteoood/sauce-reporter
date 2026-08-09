@@ -14,7 +14,7 @@
     "test:watch": "TZ=UTC node --test --watch src/**/*.test.ts"
   },
   "dependencies": {
-    "@actions/core": "^1.11.1",
+    "@actions/core": "^3.0.1",
     "@octokit/graphql": "^9.0.0",
     "date-fns": "^4.4.0"
   },
